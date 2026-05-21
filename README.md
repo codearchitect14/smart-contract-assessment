@@ -2,6 +2,28 @@
 
 A decentralized prediction markets platform built on Ethereum, allowing users to create markets, place bets, trade positions, and earn reputation based on prediction accuracy.
 
+## Assessment Solution
+
+The assessment implementation lives in `contracts/contracts/WorldCupBetting.sol`.
+
+Approach and key decisions:
+
+- Implemented a simple pool-based prediction market for 2+ outcomes, with ETH collateral when `tokenAddress == address(0)` and ERC20 collateral otherwise.
+- Bets mint internal shares using the existing project pricing formula, and `placeBet` enforces `_minShares` as the slippage guard.
+- Resolution is restricted to the configured market arbitrator and only after `resolutionTime`.
+- Winning claims receive their proportional share of the full market pool minus a 2% platform fee. Fees are tracked per collateral token and can only be withdrawn by the contract owner.
+- Losing claims still mark the bet claimed and call `ReputationSystem.updateReputation(user, false)` so reputation settlement is recorded for both sides.
+- Listed positions transfer claim ownership to the buyer; the original seller is paid in the same collateral type as the market.
+- ETH transfers use `call`, token transfers use OpenZeppelin `SafeERC20`, and state is updated before external value transfers on claim/listing purchase paths guarded by `nonReentrant`.
+
+Run the assessment tests:
+
+```bash
+cd contracts
+npm install --legacy-peer-deps
+npx hardhat test test/WorldCupBetting.assessment.test.ts
+```
+
 ## 📚 Documentation
 
 Comprehensive documentation is available in the [docs/](docs/) folder:
